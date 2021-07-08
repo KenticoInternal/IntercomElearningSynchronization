@@ -13,6 +13,12 @@ namespace Intercom.Models
         [JsonProperty("id")]
         public string Id { get; set; }
 
+        [JsonProperty("Email")]
+        public string Email { get; set; }
+
+        [JsonProperty("Role")]
+        public string Role { get; set; }
+
         [JsonProperty("type")]
         public string Type { get; set; }
 
