@@ -8,5 +8,11 @@ namespace Intercom
     public interface IIntercomService
     {
         Task<List<IntercomContact>> GetAllContactsAsync();
+
+        Task<IntercomContact> GetContactAsync(string id);
+
+        Task<IntercomContact> UpdateContactAsync(IntercomContact contact,
+            List<UpdateContactCustomAttributeData> attributes);
+
     }
 }
