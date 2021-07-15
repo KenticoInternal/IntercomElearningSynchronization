@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
+using Business;
+using ElearningData;
 using FunctionApp;
 using Intercom;
+using Kontent;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -23,7 +22,10 @@ namespace FunctionApp
         {
             builder.Services.AddHttpClient();
 
-            builder.Services.AddScoped<IIntercomService, IntercomService>(provider => 
+            builder.Services.AddScoped<IKontentService, KontentService>();
+            builder.Services.AddScoped<IBusinessService, BusinessService>();
+            builder.Services.AddScoped<IElearningDataService, ElearningDataService>();
+            builder.Services.AddScoped<IIntercomService, IntercomService>(provider =>
                 new IntercomService(provider.GetService<IHttpClientFactory>(), IntercomApiKey)
             );
         }
