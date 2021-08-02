@@ -37,14 +37,17 @@ namespace Kontent
             return trainingCourses.Items.First();
         }
 
-        public async Task<TrainingCourseModel> GetNextTrainingCourseByTalentLmsId(string id)
+        public async Task<NextTrainingCourseResult> GetNextTrainingCourseByTalentLmsId(string id)
         {
             var course = await GetTrainingCourseByTalentLmsId(id);
 
             var nextInPath = course?.NextInPath.FirstOrDefault();
 
-            return nextInPath;
-           
+            return new NextTrainingCourseResult()
+            {
+                LatestCompletedCourse = course,
+                NextCourseInPath = nextInPath
+            };
         }
 
         private IDeliveryClient GetDeliveryClient()

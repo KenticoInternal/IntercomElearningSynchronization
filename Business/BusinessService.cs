@@ -15,6 +15,11 @@ namespace Business
         private IKontentService KontentService { get; }
         private IIntercomService IntercomService { get; }
 
+        private readonly string IntercomElearningLastSynchronizedAttribute = "elearning_last_synchronized";
+        private readonly string IntercomSubscriptionAttribute = "subscription-plan";
+        private readonly string IntercomCourseToTakeAttribute = "elearning_course_to_take";
+        private readonly string IntercomLatestCompletedCourseAttribute = "elearning_latest_completed_course";
+
         public BusinessService(IElearningDataService elearningDataService, IKontentService kontentService, IIntercomService intercomService)
         {
             ElearningDataService = elearningDataService;
@@ -23,48 +28,62 @@ namespace Business
         }
 
 
-        public async Task<List<IntercomContact>> SetIntercomContactElearningAttributesAsync()
+        public async Task<List<IntercomContact>> SetIntercomContactElearningAttributesAsync(string testIntercomContactId = null)
         {
-            // var intercomContacts = await IntercomService.GetAllContactsAsync();
-            var processedContacts = new List<IntercomContact>();
+            var isTest = !string.IsNullOrEmpty(testIntercomContactId);
 
-            var intercomContacts = new List<IntercomContact>()
+            var processedContacts = new List<IntercomContact>();
+            var intercomContacts = new List<IntercomContact>();
+
+            if (isTest)
             {
-                await IntercomService.GetContactAsync("60e6d1be725a222954ae42a5")
-            };
+                // get only test contact
+                intercomContacts.Add(await IntercomService.GetContactAsync(testIntercomContactId));
+            }
+            else
+            {
+                // get contacts from intercom
+                intercomContacts.AddRange(await IntercomService.GetAllContactsAsync());
+            }
 
             foreach (var contact in intercomContacts)
             {
                 // check if user has access to e-learning
-                if (!ContactHasAccessToElearning(contact))
+                if (!ContactHasAccessToElearning(contact, isTest))
                 {
                     continue;
                 }
 
                 // get latest completed course for given user
-                var latestCompletedCourse = await ElearningDataService.GetLatestCompletedCourseAsync("janc@kentico.com");
+                var latestCompletedCourseResult = await ElearningDataService.GetLatestCompletedCourseAsync(contact.Email);
 
-                if (string.IsNullOrEmpty(latestCompletedCourse.CourseId))
+                if (string.IsNullOrEmpty(latestCompletedCourseResult.CourseId))
                 {
                     // user does not have any completed courses
                     continue;
                 }
 
                 // get next course in path
-                // var nextCourseInPath = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourse.CourseId);
-                var nextCourseInPath = await KontentService.GetNextTrainingCourseByTalentLmsId(195.ToString());
+                var nextCourseInPathResult = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourseResult.CourseId);
 
-                if (nextCourseInPath == null)
+                if (nextCourseInPathResult == null)
                 {
-                    // no next course in path
+                    // invalid result
                     continue;
                 }
+
+                var nextCourseInPath = nextCourseInPathResult.NextCourseInPath;
+                var latestCompletedCourse = nextCourseInPathResult.LatestCompletedCourse;
+
+                var synchronizedTimestamp = DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture);
 
                 // update user in intercom with next course in learning path
                 var updatedContact = IntercomService.UpdateContactAsync(contact,
                     new List<UpdateContactCustomAttributeData>()
                     {
-                        new UpdateContactCustomAttributeData("course_to_take", nextCourseInPath.Title)
+                        new UpdateContactCustomAttributeData(IntercomElearningLastSynchronizedAttribute, synchronizedTimestamp),
+                        new UpdateContactCustomAttributeData(IntercomCourseToTakeAttribute, nextCourseInPath.Title),
+                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse.Title),
                     });
 
                 processedContacts.Add(contact);
@@ -73,8 +92,21 @@ namespace Business
             return processedContacts;
         }
 
-        private bool ContactHasAccessToElearning(IntercomContact contact)
+        private bool ContactHasAccessToElearning(IntercomContact contact, bool isTest)
         {
+            if (!contact.CustomAttributes.ContainsKey(IntercomSubscriptionAttribute))
+            {
+                return false;
+            }
+
+            var subscriptionValue = contact.CustomAttributes[IntercomSubscriptionAttribute]?.ToString();
+
+            if (string.IsNullOrEmpty(subscriptionValue))
+            {
+                return false;
+            }
+
+            // user has access to subscription if subscription is not empty
             return true;
         }
     }

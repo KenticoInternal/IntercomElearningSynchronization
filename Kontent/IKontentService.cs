@@ -6,6 +6,6 @@ namespace Kontent
     public interface IKontentService
     {
         Task<TrainingCourseModel> GetTrainingCourseByTalentLmsId(string id);
-        Task<TrainingCourseModel> GetNextTrainingCourseByTalentLmsId(string id);
+        Task<NextTrainingCourseResult> GetNextTrainingCourseByTalentLmsId(string id);
     }
 }

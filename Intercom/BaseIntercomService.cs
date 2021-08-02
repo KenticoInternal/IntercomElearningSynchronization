@@ -57,7 +57,7 @@ namespace Intercom
                     throw new Exception($"Could not post data to url '{url}'. Message: {response.ReasonPhrase}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 if (attempt >= RetryAttempts)
                 {
@@ -94,7 +94,7 @@ namespace Intercom
                     throw new Exception($"Could not get response for url '{url}'. Message: {response.ReasonPhrase}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 if (attempt >= RetryAttempts)
                 {

@@ -8,8 +8,4 @@
     <PackageReference Include="Kentico.Kontent.Delivery" Version="14.2.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
 </Project>

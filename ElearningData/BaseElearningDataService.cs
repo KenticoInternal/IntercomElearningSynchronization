@@ -47,7 +47,7 @@ namespace ElearningData
                     throw new Exception($"Could not get response for url '{url}'. Message: {response.ReasonPhrase}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 if (attempt >= RetryAttempts)
                 {

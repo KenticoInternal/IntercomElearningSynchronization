@@ -7,6 +7,6 @@ namespace Business
 {
     public interface IBusinessService
     {
-        public Task<List<IntercomContact>> SetIntercomContactElearningAttributesAsync();
+        public Task<List<IntercomContact>> SetIntercomContactElearningAttributesAsync(string testIntercomContactId = null);
     }
 }
