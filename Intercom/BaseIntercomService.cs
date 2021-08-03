@@ -21,9 +21,14 @@ namespace Intercom
             ClientFactory = clientFactory;
         }
 
+        protected async Task<T> PutResponseAsync<T>(string json, string url) where T : class
+        {
+            return await PostResponseInternalAsync<T>(HttpMethod.Put, json, url, 0);
+        }
+
         protected async Task<T> PostResponseAsync<T>(string json, string url) where T : class
         {
-            return await PostResponseInternalAsync<T>(json, url, 0);
+            return await PostResponseInternalAsync<T>(HttpMethod.Post, json, url, 0);
         }
 
         protected async Task<T> GetResponseAsync<T>(string url) where T : class
@@ -31,11 +36,11 @@ namespace Intercom
             return await GetResponseInternalAsync<T>(url, 0);
         }
 
-        private async Task<T> PostResponseInternalAsync<T>(string json, string url, int attempt) where T : class
+        private async Task<T> PostResponseInternalAsync<T>(HttpMethod method, string json, string url, int attempt) where T : class
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Put, url);
+                var request = new HttpRequestMessage(method, url);
                 request.Headers.Add("Authorization", $"Bearer {ApiKey}");
                 request.Headers.Add("Accept", $"application/json");
 
@@ -57,7 +62,7 @@ namespace Intercom
                     throw new Exception($"Could not post data to url '{url}'. Message: {response.ReasonPhrase}");
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (attempt >= RetryAttempts)
                 {
@@ -66,7 +71,7 @@ namespace Intercom
 
                 await Task.Delay(RetryAttemptDelayMs);
 
-                return await GetResponseInternalAsync<T>(url, attempt + 1);
+                return await PostResponseInternalAsync<T>(method, json, url, attempt + 1);
             }
         }
 

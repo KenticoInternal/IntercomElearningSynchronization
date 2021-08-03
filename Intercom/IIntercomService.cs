@@ -9,6 +9,8 @@ namespace Intercom
     {
         Task<List<IntercomContact>> GetAllContactsAsync();
 
+        Task<List<IntercomContact>> GetAllContactsWithSubscriptionAsync();
+
         Task<IntercomContact> GetContactAsync(string id);
 
         Task<IntercomContact> UpdateContactAsync(IntercomContact contact,

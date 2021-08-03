@@ -27,7 +27,7 @@ namespace Intercom
 
             requestBody.Add("custom_attributes", customAttributes);
 
-            var response = await PostResponseAsync<IntercomContact>(JsonConvert.SerializeObject(requestBody), GetUpdateContactUrl(contact));
+            var response = await PutResponseAsync<IntercomContact>(JsonConvert.SerializeObject(requestBody), GetUpdateContactUrl(contact));
 
             return response;
         }
@@ -37,6 +37,66 @@ namespace Intercom
             var response = await GetResponseAsync<IntercomContact>(GetRetrieveContactUrl(id));
 
             return response;
+        }
+
+        public async Task<List<IntercomContact>> GetAllContactsWithSubscriptionAsync()
+        {
+            var allContacts = new List<IntercomContact>();
+            var iterate = true;
+            var startingAfter = string.Empty;
+
+            var requestBody = new SearchContactRequest()
+            {
+                
+                Query= new SearchContactQueryMultiple()
+                {
+                    Operator = "AND",
+                    Value = new List<SearchContactQueryValue>()
+                    {
+                        // get only users with some subscription plan
+                        new SearchContactQueryValue()
+                        {
+                            Field = "custom_attributes.subscription-plan",
+                            Value = null,
+                            Operator = "!="
+                        },
+                        // do not get users with Kentico plan
+                        new SearchContactQueryValue()
+                        {
+                            Field = "custom_attributes.subscription-plan",
+                            Value = "kentico",
+                            Operator = "!="
+                        },
+                        // do not get users with trial plan
+                        new SearchContactQueryValue()
+                        {
+                            Field = "custom_attributes.subscription-plan",
+                            Value = "trial",
+                            Operator = "!="
+                        }
+                    }
+                }
+            };
+
+            while (iterate)
+            {
+                var response = await SearchContactsAsync(startingAfter, requestBody);
+
+                allContacts.AddRange(response.Data);
+
+                if (!string.IsNullOrEmpty(response.Pages.Next?.StartingAfter))
+                {
+                    startingAfter = response.Pages.Next.StartingAfter;
+                }
+                else
+                {
+                    iterate = false;
+                }
+
+                iterate = false;
+            }
+
+            return allContacts;
         }
 
         public async Task<List<IntercomContact>> GetAllContactsAsync()
@@ -72,6 +132,17 @@ namespace Intercom
         private string GetRetrieveContactUrl(string id)
         {
             return $"https://api.intercom.io/contacts/{id}";
+        }
+        private string GetSearchContactsUrl()
+        {
+            return $"https://api.intercom.io/contacts/search";
+        }
+
+        private async Task<IntercomListContactsResponse> SearchContactsAsync(string startingAfter, SearchContactRequest search)
+        {
+            var response = await PostResponseAsync<IntercomListContactsResponse>(JsonConvert.SerializeObject(search),$"{GetSearchContactsUrl()}?per_page={ContactsPerPageCount}&starting_after={startingAfter}");
+
+            return response;
         }
 
         private async Task<IntercomListContactsResponse> GetContactsAsync(string startingAfter)

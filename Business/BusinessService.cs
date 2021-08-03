@@ -43,7 +43,7 @@ namespace Business
             else
             {
                 // get contacts from intercom
-                intercomContacts.AddRange(await IntercomService.GetAllContactsAsync());
+                intercomContacts.AddRange(await IntercomService.GetAllContactsWithSubscriptionAsync());
             }
 
             foreach (var contact in intercomContacts)
