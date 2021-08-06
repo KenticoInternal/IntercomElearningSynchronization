@@ -2,11 +2,13 @@ using System;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Business;
+using Business.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace FunctionApp
 {
@@ -44,11 +46,11 @@ namespace FunctionApp
 
                 }
 
-                var updatedContacts = await BusinessService.SetIntercomContactElearningAttributesAsync(testContactId);
+                var result = await BusinessService.SetIntercomContactElearningAttributesAsync(testContactId);
 
-                log.LogInformation($"End '{nameof(SynchronizeDataTestAsync)}'. Synchronized '{updatedContacts.Count}' contacts");
+                LogResultMessages(log, result);
 
-                return new OkObjectResult($"Synchronized '{updatedContacts.Count}' contacts");
+                return new JsonResult(GetLogResultsObject(result));
 
             }
             catch (Exception ex)
@@ -70,11 +72,13 @@ namespace FunctionApp
             {
                 log.LogInformation($"Start '{nameof(SynchronizeDataAsync)}'");
 
-                var updatedContacts = await BusinessService.SetIntercomContactElearningAttributesAsync();
+                var result = await BusinessService.SetIntercomContactElearningAttributesAsync();
 
-                log.LogInformation($"End '{nameof(SynchronizeDataAsync)}'. Synchronized '{updatedContacts.Count}' contacts");
+                LogResultMessages(log, result);
 
-                return new OkObjectResult($"Synchronized '{updatedContacts.Count}' contacts");
+                log.LogInformation($"End '{nameof(SynchronizeDataAsync)}'.");
+
+                return new JsonResult(GetLogResultsObject(result));
 
             }
             catch (Exception ex)
@@ -85,6 +89,40 @@ namespace FunctionApp
                 return new BadRequestErrorMessageResult(errorMsg);
             }
           
+        }
+
+        private SynchronizeFunctionResult GetLogResultsObject(SynchronizationResult result)
+        {
+            return new SynchronizeFunctionResult()
+            {
+                UsersWithoutCompletedCourses = result.UsersWithoutCompletedCourses.Count,
+                UsersWithCourseButNoNextInPathCourses = result.UsersWithCourseButNoNextInPathCourses.Count,
+                UsersWithoutAccessToElearning = result.UsersWithoutAccessToElearning.Count,
+                UsersWithNextCourseInPath = result.UsersWithNextCourseInPath.Count
+            };
+        }
+
+        private void LogResultMessages(ILogger log, SynchronizationResult result)
+        {
+            log.LogInformation($"Users with next course: {result.UsersWithNextCourseInPath.Count}");
+            log.LogInformation($"Users without any completed courses: {result.UsersWithoutCompletedCourses.Count}");
+            log.LogInformation($"Users with no available next in path course: {result.UsersWithCourseButNoNextInPathCourses.Count}");
+            log.LogInformation($"Users without access to elearning: {result.UsersWithoutAccessToElearning.Count}");
+        }
+
+        public class SynchronizeFunctionResult
+        {
+            [JsonProperty("Users with next course")]
+            public int UsersWithNextCourseInPath { get; set; }
+
+            [JsonProperty("Users without any completed courses")]
+            public int UsersWithoutCompletedCourses { get; set; }
+
+            [JsonProperty("Users with no available next in path course")]
+            public int UsersWithCourseButNoNextInPathCourses { get; set; }
+
+            [JsonProperty("Users without access to elearning")]
+            public int UsersWithoutAccessToElearning { get; set; }
         }
     }
 }

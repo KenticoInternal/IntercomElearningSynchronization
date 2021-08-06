@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Business.Models;
 using ElearningData;
 using Intercom;
 using Intercom.Models;
@@ -28,11 +29,18 @@ namespace Business
         }
 
 
-        public async Task<List<IntercomContact>> SetIntercomContactElearningAttributesAsync(string testIntercomContactId = null)
+        public async Task<SynchronizationResult> SetIntercomContactElearningAttributesAsync(string testIntercomContactId = null)
         {
+            var result = new SynchronizationResult()
+            {
+                UsersWithNextCourseInPath = new List<IntercomContact>(),
+                UsersWithoutAccessToElearning = new List<IntercomContact>(),
+                UsersWithoutCompletedCourses = new List<IntercomContact>(),
+                UsersWithCourseButNoNextInPathCourses = new List<IntercomContact>()
+            };
+
             var isTest = !string.IsNullOrEmpty(testIntercomContactId);
 
-            var processedContacts = new List<IntercomContact>();
             var intercomContacts = new List<IntercomContact>();
 
             if (isTest)
@@ -51,6 +59,7 @@ namespace Business
                 // check if user has access to e-learning
                 if (!ContactHasAccessToElearning(contact, isTest))
                 {
+                    result.UsersWithoutAccessToElearning.Add(contact);
                     continue;
                 }
 
@@ -60,6 +69,7 @@ namespace Business
                 if (string.IsNullOrEmpty(latestCompletedCourseResult.CourseId))
                 {
                     // user does not have any completed courses
+                    result.UsersWithoutCompletedCourses.Add(contact);
                     continue;
                 }
 
@@ -68,7 +78,8 @@ namespace Business
 
                 if (nextCourseInPathResult == null)
                 {
-                    // invalid result
+                    // no next course is available
+                    result.UsersWithCourseButNoNextInPathCourses.Add(contact);
                     continue;
                 }
 
@@ -86,10 +97,10 @@ namespace Business
                         new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse.Title),
                     });
 
-                processedContacts.Add(contact);
+                result.UsersWithNextCourseInPath.Add(contact);
             }
 
-            return processedContacts;
+            return result;
         }
 
         private bool ContactHasAccessToElearning(IntercomContact contact, bool isTest)
