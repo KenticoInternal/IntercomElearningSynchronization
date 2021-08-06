@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Intercom.Models;
@@ -10,6 +11,9 @@ namespace Intercom
     public class IntercomService : BaseIntercomService, IIntercomService
     {
 
+        /// <summary>
+        /// 150 is maximum pagination value allowed by Intercom
+        /// </summary>
         private readonly int ContactsPerPageCount = 150;
 
         public IntercomService(IHttpClientFactory clientFactory, string apiKey) : base(clientFactory, apiKey) {}
@@ -45,42 +49,15 @@ namespace Intercom
             var iterate = true;
             var startingAfter = string.Empty;
 
-            var requestBody = new SearchContactRequest()
-            {
-                
-                Query= new SearchContactQueryMultiple()
-                {
-                    Operator = "AND",
-                    Value = new List<SearchContactQueryValue>()
-                    {
-                        // get only users with some subscription plan
-                        new SearchContactQueryValue()
-                        {
-                            Field = "custom_attributes.subscription-plan",
-                            Value = null,
-                            Operator = "!="
-                        },
-                        // do not get users with Kentico plan
-                        new SearchContactQueryValue()
-                        {
-                            Field = "custom_attributes.subscription-plan",
-                            Value = "kentico",
-                            Operator = "!="
-                        },
-                        // do not get users with trial plan
-                        new SearchContactQueryValue()
-                        {
-                            Field = "custom_attributes.subscription-plan",
-                            Value = "trial",
-                            Operator = "!="
-                        }
-                    }
-                }
-            };
+            // get only users there were recently seen - no point in getting all users that might 
+            // not be active
+            var lastSeenAtThreshold = DateTime.UtcNow.AddDays(-7);
+            var lastSeenAtThresholdUnixTimeStamp = ((DateTimeOffset)lastSeenAtThreshold).ToUnixTimeSeconds();
 
             while (iterate)
             {
-                var response = await SearchContactsAsync(startingAfter, requestBody);
+                var requestBody = GetSearchRequestBody(lastSeenAtThresholdUnixTimeStamp, startingAfter);
+                var response = await SearchContactsAsync(requestBody);
 
                 allContacts.AddRange(response.Data);
 
@@ -92,8 +69,6 @@ namespace Intercom
                 {
                     iterate = false;
                 }
-
-                iterate = false;
             }
 
             return allContacts;
@@ -124,6 +99,55 @@ namespace Intercom
             return allContacts;
         }
 
+        private SearchContactRequest GetSearchRequestBody(long lastSeenThreshold, string startingAfter = null)
+        {
+            var requestBody = new SearchContactRequest()
+            {
+                Pagination = new SearchContactPaginationRequest()
+                {
+                    PerPage = ContactsPerPageCount,
+                    StartingAfter = startingAfter
+                },
+                Query = new SearchContactQueryMultiple()
+                {
+                    Operator = "AND",
+                    Value = new List<SearchContactQueryValue>()
+                    {
+                        // get only users with some subscription plan
+                        new SearchContactQueryValue()
+                        {
+                            Field = "custom_attributes.subscription-plan",
+                            Value = null,
+                            Operator = "!="
+                        },
+                        // do not get users with Kentico plan
+                        new SearchContactQueryValue()
+                        {
+                            Field = "custom_attributes.subscription-plan",
+                            Value = "kentico",
+                            Operator = "!="
+                        },
+                        // do not get users with trial plan
+                        new SearchContactQueryValue()
+                        {
+                            Field = "custom_attributes.subscription-plan",
+                            Value = "trial",
+                            Operator = "!="
+                        },
+                        // get only users that were recently active
+                        new SearchContactQueryValue()
+                        {
+                            Field = "last_seen_at",
+                            Value = lastSeenThreshold.ToString(),
+                            Operator = ">"
+                        }
+                    }
+                }
+            };
+
+            return requestBody;
+        }
+
         private string GetUpdateContactUrl(IntercomContact contact)
         {
             return $"https://api.intercom.io/contacts/{contact.Id}";
@@ -138,9 +162,9 @@ namespace Intercom
             return $"https://api.intercom.io/contacts/search";
         }
 
-        private async Task<IntercomListContactsResponse> SearchContactsAsync(string startingAfter, SearchContactRequest search)
+        private async Task<IntercomListContactsResponse> SearchContactsAsync(SearchContactRequest search)
         {
-            var response = await PostResponseAsync<IntercomListContactsResponse>(JsonConvert.SerializeObject(search),$"{GetSearchContactsUrl()}?per_page={ContactsPerPageCount}&starting_after={startingAfter}");
+            var response = await PostResponseAsync<IntercomListContactsResponse>(JsonConvert.SerializeObject(search),GetSearchContactsUrl());
 
             return response;
         }
