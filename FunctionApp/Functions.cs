@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Business;
@@ -50,7 +51,7 @@ namespace FunctionApp
 
                 LogResultMessages(log, result);
 
-                return new JsonResult(GetLogResultsObject(result));
+                return new JsonResult(GetLogTestResultsObject(result));
 
             }
             catch (Exception ex)
@@ -91,6 +92,33 @@ namespace FunctionApp
           
         }
 
+        private SynchronizeFunctionTestResult GetLogTestResultsObject(SynchronizationResult result)
+        {
+            var contactResult = result.UsersWithCourseButNoNextInPathCourses.FirstOrDefault();
+
+            if (contactResult == null)
+            {
+                contactResult = result.UsersWithNextCourseInPath.FirstOrDefault();
+            }
+
+            if (contactResult == null)
+            {
+                contactResult = result.UsersWithoutAccessToElearning.FirstOrDefault();
+            }
+
+            if (contactResult == null)
+            {
+                contactResult = result.UsersWithoutCompletedCourses.FirstOrDefault();
+            }
+
+            return new SynchronizeFunctionTestResult()
+            {
+                NextCourse = contactResult?.NextCourse,
+                ContactEmail = contactResult?.Contact?.Email,
+                ContactId = contactResult?.Contact?.Id
+            };
+        }
+
         private SynchronizeFunctionResult GetLogResultsObject(SynchronizationResult result)
         {
             return new SynchronizeFunctionResult()
@@ -123,6 +151,18 @@ namespace FunctionApp
 
             [JsonProperty("Users without access to elearning")]
             public int UsersWithoutAccessToElearning { get; set; }
+        }
+
+        public class SynchronizeFunctionTestResult
+        {
+            [JsonProperty("Contact Id")]
+            public string ContactId { get; set; }
+
+            [JsonProperty("Contact e-mail")]
+            public string ContactEmail { get; set; }
+
+            [JsonProperty("Next course")]
+            public string NextCourse { get; set; }
         }
     }
 }

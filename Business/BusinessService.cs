@@ -33,10 +33,10 @@ namespace Business
         {
             var result = new SynchronizationResult()
             {
-                UsersWithNextCourseInPath = new List<IntercomContact>(),
-                UsersWithoutAccessToElearning = new List<IntercomContact>(),
-                UsersWithoutCompletedCourses = new List<IntercomContact>(),
-                UsersWithCourseButNoNextInPathCourses = new List<IntercomContact>()
+                UsersWithNextCourseInPath = new List<IntercomContactSynchronizationResult>(),
+                UsersWithoutAccessToElearning = new List<IntercomContactSynchronizationResult>(),
+                UsersWithoutCompletedCourses = new List<IntercomContactSynchronizationResult>(),
+                UsersWithCourseButNoNextInPathCourses = new List<IntercomContactSynchronizationResult>()
             };
 
             var isTest = !string.IsNullOrEmpty(testIntercomContactId);
@@ -59,7 +59,7 @@ namespace Business
                 // check if user has access to e-learning
                 if (!ContactHasAccessToElearning(contact, isTest))
                 {
-                    result.UsersWithoutAccessToElearning.Add(contact);
+                    result.UsersWithoutAccessToElearning.Add(new IntercomContactSynchronizationResult(contact));
                     continue;
                 }
 
@@ -69,7 +69,7 @@ namespace Business
                 if (string.IsNullOrEmpty(latestCompletedCourseResult.CourseId))
                 {
                     // user does not have any completed courses
-                    result.UsersWithoutCompletedCourses.Add(contact);
+                    result.UsersWithoutCompletedCourses.Add(new IntercomContactSynchronizationResult(contact));
                     continue;
                 }
 
@@ -79,7 +79,7 @@ namespace Business
                 if (nextCourseInPathResult == null)
                 {
                     // no next course is available
-                    result.UsersWithCourseButNoNextInPathCourses.Add(contact);
+                    result.UsersWithCourseButNoNextInPathCourses.Add(new IntercomContactSynchronizationResult(contact));
                     continue;
                 }
 
@@ -97,7 +97,7 @@ namespace Business
                         new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse.Title),
                     });
 
-                result.UsersWithNextCourseInPath.Add(contact);
+                result.UsersWithNextCourseInPath.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath.Title));
             }
 
             return result;

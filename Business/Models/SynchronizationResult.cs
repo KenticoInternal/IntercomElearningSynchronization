@@ -7,10 +7,10 @@ namespace Business.Models
 {
     public class SynchronizationResult
     {
-        public List<IntercomContact> UsersWithNextCourseInPath { get; set; }
-        public List<IntercomContact> UsersWithoutAccessToElearning { get; set; }
-        public List<IntercomContact> UsersWithoutCompletedCourses { get; set; }
-        public List<IntercomContact> UsersWithCourseButNoNextInPathCourses { get; set; }
+        public List<IntercomContactSynchronizationResult> UsersWithNextCourseInPath { get; set; }
+        public List<IntercomContactSynchronizationResult> UsersWithoutAccessToElearning { get; set; }
+        public List<IntercomContactSynchronizationResult> UsersWithoutCompletedCourses { get; set; }
+        public List<IntercomContactSynchronizationResult> UsersWithCourseButNoNextInPathCourses { get; set; }
 
     }
 }
