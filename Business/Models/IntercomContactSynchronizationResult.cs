@@ -6,16 +6,18 @@ namespace Business.Models
     {
         public IntercomContact Contact { get; }
         public string NextCourse { get; }
+        public string LatestCourse { get; }
 
         public IntercomContactSynchronizationResult(IntercomContact contact)
         {
             Contact = contact;
         }
 
-        public IntercomContactSynchronizationResult(IntercomContact contact, string nextCourse)
+        public IntercomContactSynchronizationResult(IntercomContact contact, string nextCourse, string latestCourse)
         {
             Contact = contact;
             NextCourse = nextCourse;
+            LatestCourse = latestCourse;
         }
     }
 }

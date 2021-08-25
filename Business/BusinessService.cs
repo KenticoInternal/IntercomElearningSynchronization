@@ -97,7 +97,7 @@ namespace Business
                         new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse.Title),
                     });
 
-                result.UsersWithNextCourseInPath.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath.Title));
+                result.UsersWithNextCourseInPath.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath.Title, latestCompletedCourse.Title));
             }
 
             return result;

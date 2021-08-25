@@ -114,6 +114,7 @@ namespace FunctionApp
             return new SynchronizeFunctionTestResult()
             {
                 NextCourse = contactResult?.NextCourse,
+                LatestCourse = contactResult?.LatestCourse,
                 ContactEmail = contactResult?.Contact?.Email,
                 ContactId = contactResult?.Contact?.Id
             };
@@ -160,6 +161,9 @@ namespace FunctionApp
 
             [JsonProperty("Contact e-mail")]
             public string ContactEmail { get; set; }
+
+            [JsonProperty("Latest completed course")]
+            public string LatestCourse { get; set; }
 
             [JsonProperty("Next course")]
             public string NextCourse { get; set; }

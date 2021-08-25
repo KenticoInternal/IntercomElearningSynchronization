@@ -23,8 +23,7 @@ namespace Intercom.Models
         public string Type { get; set; }
 
         [JsonProperty("last_seen_at")]
-        public long LastSeenAt { get; set; }
-
+        public long? LastSeenAt { get; set; }
 
         [JsonProperty("custom_attributes")]
         public JObject CustomAttributes { get; set; }
@@ -34,7 +33,7 @@ namespace Intercom.Models
 
         public string SignUpDate => CustomAttributes.SelectToken("sign_up_date").Value<string>();
 
-        public DateTime LastSeenAtDatetime => DateTime.UnixEpoch.AddSeconds(LastSeenAt);
+        public DateTime? LastSeenAtDatetime => LastSeenAt == null ? null : DateTime.UnixEpoch.AddSeconds(LastSeenAt.Value);
 
     }
 }

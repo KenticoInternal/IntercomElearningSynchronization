@@ -114,28 +114,28 @@ namespace Intercom
                     Value = new List<SearchContactQueryValue>()
                     {
                         // get only users with some subscription plan
-                        new SearchContactQueryValue()
+                        new()
                         {
                             Field = "custom_attributes.subscription-plan",
                             Value = null,
                             Operator = "!="
                         },
                         // do not get users with Kentico plan
-                        new SearchContactQueryValue()
+                        new()
                         {
                             Field = "custom_attributes.subscription-plan",
                             Value = "kentico",
                             Operator = "!="
                         },
                         // do not get users with trial plan
-                        new SearchContactQueryValue()
+                        new()
                         {
                             Field = "custom_attributes.subscription-plan",
                             Value = "trial",
                             Operator = "!="
                         },
                         // get only users that were recently active
-                        new SearchContactQueryValue()
+                        new()
                         {
                             Field = "last_seen_at",
                             Value = lastSeenThreshold.ToString(),
