@@ -7,6 +7,7 @@ using ElearningData;
 using Intercom;
 using Intercom.Models;
 using Kontent;
+using Kontent.Models;
 
 namespace Business
 {
@@ -19,7 +20,9 @@ namespace Business
         private readonly string IntercomElearningLastSynchronizedAttribute = "elearning_last_synchronized";
         private readonly string IntercomSubscriptionAttribute = "subscription-plan";
         private readonly string IntercomCourseToTakeAttribute = "elearning_course_to_take";
+        private readonly string IntercomCourseToTakeAttributeUrl = "elearning_course_to_take_url";
         private readonly string IntercomLatestCompletedCourseAttribute = "elearning_latest_completed_course";
+        private readonly string IntercomLatestCompletedCourseAttributeUrl = "elearning_latest_completed_course_url";
 
         public BusinessService(IElearningDataService elearningDataService, IKontentService kontentService, IIntercomService intercomService)
         {
@@ -76,13 +79,6 @@ namespace Business
                 // get next course in path
                 var nextCourseInPathResult = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourseResult.CourseId);
 
-                if (nextCourseInPathResult == null)
-                {
-                    // no next course is available
-                    result.UsersWithCourseButNoNextInPathCourses.Add(new IntercomContactSynchronizationResult(contact));
-                    continue;
-                }
-
                 var nextCourseInPath = nextCourseInPathResult.NextCourseInPath;
                 var latestCompletedCourse = nextCourseInPathResult.LatestCompletedCourse;
 
@@ -93,14 +89,21 @@ namespace Business
                     new List<UpdateContactCustomAttributeData>()
                     {
                         new UpdateContactCustomAttributeData(IntercomElearningLastSynchronizedAttribute, synchronizedTimestamp),
-                        new UpdateContactCustomAttributeData(IntercomCourseToTakeAttribute, nextCourseInPath.Title),
-                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse.Title),
+                        new UpdateContactCustomAttributeData(IntercomCourseToTakeAttribute, nextCourseInPath?.Title),
+                        new UpdateContactCustomAttributeData(IntercomCourseToTakeAttributeUrl, nextCourseInPath == null ? null : GetCourseUrl(nextCourseInPath)),
+                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse?.Title),
+                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttributeUrl, latestCompletedCourse == null ? null : GetCourseUrl(latestCompletedCourse)),
                     });
 
-                result.UsersWithNextCourseInPath.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath.Title, latestCompletedCourse.Title));
+                result.UsersWithNextCourseInPath.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath?.Title, latestCompletedCourse?.Title));
             }
 
             return result;
+        }
+
+        private string GetCourseUrl(TrainingCourseModel course)
+        {
+            return $"https://docs.kontent.ai/e-learning/{course.Url}";
         }
 
         private bool ContactHasAccessToElearning(IntercomContact contact, bool isTest)
