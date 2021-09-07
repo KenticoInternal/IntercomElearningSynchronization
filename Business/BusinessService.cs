@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Business.Models;
@@ -57,6 +58,10 @@ namespace Business
                 intercomContacts.AddRange(await IntercomService.GetAllContactsWithSubscriptionAsync());
             }
 
+            // get user -> courses
+            var userEmails = intercomContacts.Select(m => m.Email).ToList();
+            var userCourses = await ElearningDataService.GetLatestCompletedCoursesAsync(userEmails);
+
             foreach (var contact in intercomContacts)
             {
                 // check if user has access to e-learning
@@ -67,9 +72,10 @@ namespace Business
                 }
 
                 // get latest completed course for given user
-                var latestCompletedCourseResult = await ElearningDataService.GetLatestCompletedCourseAsync(contact.Email);
+                var latestCompletedCourseResult = userCourses.Users
+                    .FirstOrDefault(m => m.Email.Equals(contact.Email, StringComparison.OrdinalIgnoreCase));
 
-                if (string.IsNullOrEmpty(latestCompletedCourseResult.CourseId))
+                if (string.IsNullOrEmpty(latestCompletedCourseResult?.Course))
                 {
                     // user does not have any completed courses
                     result.UsersWithoutCompletedCourses.Add(new IntercomContactSynchronizationResult(contact));
@@ -77,7 +83,7 @@ namespace Business
                 }
 
                 // get next course in path
-                var nextCourseInPathResult = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourseResult.CourseId);
+                var nextCourseInPathResult = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourseResult.Course);
 
                 var nextCourseInPath = nextCourseInPathResult.NextCourseInPath;
                 var latestCompletedCourse = nextCourseInPathResult.LatestCompletedCourse;

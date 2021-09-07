@@ -44,7 +44,7 @@ namespace Intercom
                 request.Headers.Add("Authorization", $"Bearer {ApiKey}");
                 request.Headers.Add("Accept", $"application/json");
 
-                request.Content  = new StringContent(json, Encoding.UTF8, "application/json");
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var client = ClientFactory.CreateClient();
 
@@ -74,6 +74,7 @@ namespace Intercom
                 return await PostResponseInternalAsync<T>(method, json, url, attempt + 1);
             }
         }
+
 
         private async Task<T> GetResponseInternalAsync<T>(string url, int attempt) where T : class
         {

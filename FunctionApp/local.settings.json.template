@@ -1,11 +1,16 @@
 {
-    "IsEncrypted": false,
+  "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "IntercomLastSeenInXDays":
+      "2", // only intercom contacts last seen in last "X" days are fetched (to improve performance)
     "IntercomApiKey": "",
     "KontentProjectId": "",
     "KontentSecureApiKey": "",
-    "GetLastCompletedCourseFunctionUrl":  "" 
+    "GetLastCompletedCoursesFunctionUrl":
+      "https://talentlmsdatagrabber.azurewebsites.net/api/GetLastCompletedCourses?code=HteQsEDoTw9szPslqRey/xevgML5Kbrw7xgbEzoxx70qcPf7nvfnfg==",
+    "GetLastCompletedCourseFunctionUrl":
+      "https://talentlmsdatagrabber.azurewebsites.net/api/GetLastCompletedCourse?code=msoLvdkvfdp/X3rDZGXULmx1ofHSOcqesmWwm/TaEapfugGxDkKf8Q=="
   }
 }

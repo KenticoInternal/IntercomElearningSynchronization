@@ -16,6 +16,8 @@ namespace Intercom
         /// </summary>
         private readonly int ContactsPerPageCount = 150;
 
+        private int ContactLastSeenInXDays => int.Parse(Environment.GetEnvironmentVariable("IntercomLastSeenInXDays") ?? "1");
+
         public IntercomService(IHttpClientFactory clientFactory, string apiKey) : base(clientFactory, apiKey) {}
 
         public async Task<IntercomContact> UpdateContactAsync(IntercomContact contact, List<UpdateContactCustomAttributeData> attributes)
@@ -51,7 +53,7 @@ namespace Intercom
 
             // get only users there were recently seen - no point in getting all users that might 
             // not be active
-            var lastSeenAtThreshold = DateTime.UtcNow.AddDays(-7);
+            var lastSeenAtThreshold = DateTime.UtcNow.AddDays(-ContactLastSeenInXDays);
             var lastSeenAtThresholdUnixTimeStamp = ((DateTimeOffset)lastSeenAtThreshold).ToUnixTimeSeconds();
 
             while (iterate)

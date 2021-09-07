@@ -24,15 +24,15 @@ namespace FunctionApp
             BusinessService = businessService;
         }
 
-        [FunctionName("SynchronizeDataTest")]
-        public async Task<IActionResult> SynchronizeDataTestAsync([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
+        [FunctionName("SynchronizeContactTest")]
+        public async Task<IActionResult> SynchronizeContactTestAsync([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
             HttpRequest req,
             ILogger log)
         {
 
             try
             {
-                log.LogInformation($"Start '{nameof(SynchronizeDataTestAsync)}'");
+                log.LogInformation($"Start '{nameof(SynchronizeContactTestAsync)}'");
 
                 string testContactId = null;
                 if (req.Query.ContainsKey(_testContactIdQueryStringName))
