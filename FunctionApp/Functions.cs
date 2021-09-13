@@ -94,7 +94,7 @@ namespace FunctionApp
 
         [FunctionName("SynchronizeDataTimer")]
         public async Task<IActionResult> SynchronizeDataTimerAsync(
-            [TimerTrigger("0 0 20 * * *")] TimerInfo myTimer, // at 20:00 UTC every week day
+            [TimerTrigger("0 0 8 * * *")] TimerInfo myTimer, // at 8:00 UTC every week day
             ILogger log)
         {
 
