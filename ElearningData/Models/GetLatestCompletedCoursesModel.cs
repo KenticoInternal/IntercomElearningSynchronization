@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace ElearningData.Models
@@ -19,6 +20,9 @@ namespace ElearningData.Models
 
         [JsonProperty("course")]
         public string Course { get; set; }
+
+        [JsonProperty("completedUtc")]
+        public DateTime? CompletedUtc { get; set; }
 
     }
 }

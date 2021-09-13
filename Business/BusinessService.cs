@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Business.Models;
 using ElearningData;
+using Humanizer;
 using Intercom;
 using Intercom.Models;
 using Kontent;
@@ -23,7 +24,8 @@ namespace Business
         private readonly string IntercomCourseToTakeAttribute = "elearning_course_to_take";
         private readonly string IntercomCourseToTakeAttributeUrl = "elearning_course_to_take_url";
         private readonly string IntercomLatestCompletedCourseAttribute = "elearning_latest_completed_course";
-        private readonly string IntercomLatestCompletedCourseAttributeUrl = "elearning_latest_completed_course_url";
+        private readonly string IntercomLatestCompletedCourseUrlAttribute = "elearning_latest_completed_course_url";
+        private readonly string IntercomLatestCompletedCourseDateAttribute = "elearning_latest_completed_course_date";
 
         public BusinessService(IElearningDataService elearningDataService, IKontentService kontentService, IIntercomService intercomService)
         {
@@ -85,6 +87,9 @@ namespace Business
                 // get next course in path
                 var nextCourseInPathResult = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourseResult.Course);
 
+                // latest completed course date
+                var latestCompletedCourseDate = latestCompletedCourseResult.CompletedUtc?.Humanize();
+
                 var nextCourseInPath = nextCourseInPathResult.NextCourseInPath;
                 var latestCompletedCourse = nextCourseInPathResult.LatestCompletedCourse;
 
@@ -95,10 +100,11 @@ namespace Business
                     new List<UpdateContactCustomAttributeData>()
                     {
                         new UpdateContactCustomAttributeData(IntercomElearningLastSynchronizedAttribute, synchronizedTimestamp),
+                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseDateAttribute, latestCompletedCourseDate),
                         new UpdateContactCustomAttributeData(IntercomCourseToTakeAttribute, nextCourseInPath?.Title),
                         new UpdateContactCustomAttributeData(IntercomCourseToTakeAttributeUrl, nextCourseInPath == null ? null : GetCourseUrl(nextCourseInPath)),
                         new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse?.Title),
-                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttributeUrl, latestCompletedCourse == null ? null : GetCourseUrl(latestCompletedCourse)),
+                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseUrlAttribute, latestCompletedCourse == null ? null : GetCourseUrl(latestCompletedCourse)),
                     });
 
                 result.UsersWithNextCourseInPath.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath?.Title, latestCompletedCourse?.Title));

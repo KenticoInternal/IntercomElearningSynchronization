@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Humanizer" Version="2.11.10" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ElearningData\ElearningData.csproj" />
     <ProjectReference Include="..\Intercom\Intercom.csproj" />
     <ProjectReference Include="..\Kontent\Kontent.csproj" />
