@@ -33,7 +33,19 @@ namespace Intercom.Models
 
         public string SignUpDate => CustomAttributes.SelectToken("sign_up_date").Value<string>();
 
-        public DateTime? LastSeenAtDatetime => LastSeenAt == null ? null : DateTime.UnixEpoch.AddSeconds(LastSeenAt.Value);
+        public DateTime? LastSeenAtDatetime
+        {
+            get
+            {
+                if (LastSeenAt == null)
+                {
+                    return null;
+                }
+
+                return DateTime.UnixEpoch.AddSeconds(LastSeenAt.Value);
+
+            }
+        }
 
     }
 }
