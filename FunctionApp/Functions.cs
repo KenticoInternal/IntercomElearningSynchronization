@@ -94,7 +94,7 @@ namespace FunctionApp
 
         [FunctionName("SynchronizeDataTimer")]
         public async Task SynchronizeDataTimerAsync(
-            [TimerTrigger("0 0 8 * * *")] TimerInfo myTimer, // at 8:00 UTC every week day
+            [TimerTrigger("0 0 21 * * *")] TimerInfo myTimer, // at 21:00 UTC every week day
             ILogger log)
         {
 
@@ -119,12 +119,7 @@ namespace FunctionApp
 
         private SynchronizeFunctionTestResult GetLogTestResultsObject(SynchronizationResult result)
         {
-            var contactResult = result.UsersWithCourseButNoNextInPathCourses.FirstOrDefault();
-
-            if (contactResult == null)
-            {
-                contactResult = result.UsersWithNextCourseInPath.FirstOrDefault();
-            }
+            var contactResult = result.UsersWithCompletedCourse.FirstOrDefault();
 
             if (contactResult == null)
             {
@@ -150,30 +145,25 @@ namespace FunctionApp
             return new SynchronizeFunctionResult()
             {
                 UsersWithoutCompletedCourses = result.UsersWithoutCompletedCourses.Count,
-                UsersWithCourseButNoNextInPathCourses = result.UsersWithCourseButNoNextInPathCourses.Count,
                 UsersWithoutAccessToElearning = result.UsersWithoutAccessToElearning.Count,
-                UsersWithNextCourseInPath = result.UsersWithNextCourseInPath.Count
+                UsersWithCompletedCourse = result.UsersWithCompletedCourse.Count
             };
         }
 
         private void LogResultMessages(ILogger log, SynchronizationResult result)
         {
-            log.LogInformation($"Users with next course: {result.UsersWithNextCourseInPath.Count}");
+            log.LogInformation($"Users with completed course: {result.UsersWithCompletedCourse.Count}");
             log.LogInformation($"Users without any completed courses: {result.UsersWithoutCompletedCourses.Count}");
-            log.LogInformation($"Users with no available next in path course: {result.UsersWithCourseButNoNextInPathCourses.Count}");
             log.LogInformation($"Users without access to elearning: {result.UsersWithoutAccessToElearning.Count}");
         }
 
         public class SynchronizeFunctionResult
         {
-            [JsonProperty("Users with next course")]
-            public int UsersWithNextCourseInPath { get; set; }
+            [JsonProperty("Users with completed course")]
+            public int UsersWithCompletedCourse { get; set; }
 
             [JsonProperty("Users without any completed courses")]
             public int UsersWithoutCompletedCourses { get; set; }
-
-            [JsonProperty("Users with no available next in path course")]
-            public int UsersWithCourseButNoNextInPathCourses { get; set; }
 
             [JsonProperty("Users without access to elearning")]
             public int UsersWithoutAccessToElearning { get; set; }

@@ -39,10 +39,9 @@ namespace Business
         {
             var result = new SynchronizationResult()
             {
-                UsersWithNextCourseInPath = new List<IntercomContactSynchronizationResult>(),
+                UsersWithCompletedCourse = new List<IntercomContactSynchronizationResult>(),
                 UsersWithoutAccessToElearning = new List<IntercomContactSynchronizationResult>(),
                 UsersWithoutCompletedCourses = new List<IntercomContactSynchronizationResult>(),
-                UsersWithCourseButNoNextInPathCourses = new List<IntercomContactSynchronizationResult>()
             };
 
             var isTest = !string.IsNullOrEmpty(testIntercomContactId);
@@ -107,7 +106,7 @@ namespace Business
                         new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseUrlAttribute, latestCompletedCourse == null ? null : GetCourseUrl(latestCompletedCourse)),
                     });
 
-                result.UsersWithNextCourseInPath.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath?.Title, latestCompletedCourse?.Title));
+                result.UsersWithCompletedCourse.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath?.Title, latestCompletedCourse?.Title));
             }
 
             return result;
