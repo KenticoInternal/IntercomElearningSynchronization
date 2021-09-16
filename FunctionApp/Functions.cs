@@ -93,7 +93,7 @@ namespace FunctionApp
         }
 
         [FunctionName("SynchronizeDataTimer")]
-        public async Task<IActionResult> SynchronizeDataTimerAsync(
+        public async Task SynchronizeDataTimerAsync(
             [TimerTrigger("0 0 8 * * *")] TimerInfo myTimer, // at 8:00 UTC every week day
             ILogger log)
         {
@@ -107,18 +107,14 @@ namespace FunctionApp
                 LogResultMessages(log, result);
 
                 log.LogInformation($"End '{nameof(SynchronizeDataTimerAsync)}'.");
-
-                return new JsonResult(GetLogResultsObject(result));
-
             }
             catch (Exception ex)
             {
                 var errorMsg = $"Could not synchronize intercom data: {ex}";
                 log.LogError(ex, errorMsg);
 
-                return new BadRequestErrorMessageResult(errorMsg);
+                throw;
             }
-
         }
 
         private SynchronizeFunctionTestResult GetLogTestResultsObject(SynchronizationResult result)
