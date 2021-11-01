@@ -19,13 +19,13 @@ namespace Business
         private IKontentService KontentService { get; }
         private IIntercomService IntercomService { get; }
 
-        private readonly string IntercomElearningLastSynchronizedAttribute = "elearning_last_synchronized";
+        private readonly string IntercomElearningLastSynchronizedAttribute = "elearning_last_synchronized_at";
         private readonly string IntercomSubscriptionAttribute = "subscription-plan";
         private readonly string IntercomCourseToTakeAttribute = "elearning_course_to_take";
         private readonly string IntercomCourseToTakeAttributeUrl = "elearning_course_to_take_url";
         private readonly string IntercomLatestCompletedCourseAttribute = "elearning_latest_completed_course";
         private readonly string IntercomLatestCompletedCourseUrlAttribute = "elearning_latest_completed_course_url";
-        private readonly string IntercomLatestCompletedCourseDateAttribute = "elearning_latest_completed_course_date";
+        private readonly string IntercomLatestCompletedCourseDateAttribute = "elearning_latest_completed_course_at";
 
         public BusinessService(IElearningDataService elearningDataService, IKontentService kontentService, IIntercomService intercomService)
         {
@@ -87,19 +87,24 @@ namespace Business
                 var nextCourseInPathResult = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourseResult.Course);
 
                 // latest completed course date
-                var latestCompletedCourseDate = latestCompletedCourseResult.CompletedUtc?.Humanize();
+                long? latestCompletedCourseUnixTimeStamp = null;
+
+                if (latestCompletedCourseResult?.CompletedUtc != null)
+                {
+                    latestCompletedCourseUnixTimeStamp = ((DateTimeOffset)latestCompletedCourseResult?.CompletedUtc.Value).ToUnixTimeSeconds();
+                }
 
                 var nextCourseInPath = nextCourseInPathResult.NextCourseInPath;
                 var latestCompletedCourse = nextCourseInPathResult.LatestCompletedCourse;
 
-                var synchronizedTimestamp = DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture);
+                var synchronizedUnixTimeStamp = DateTimeOffset.Now.ToUnixTimeSeconds();
 
                 // update user in intercom with next course in learning path
                 var updatedContact = IntercomService.UpdateContactAsync(contact,
                     new List<UpdateContactCustomAttributeData>()
                     {
-                        new UpdateContactCustomAttributeData(IntercomElearningLastSynchronizedAttribute, synchronizedTimestamp),
-                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseDateAttribute, latestCompletedCourseDate),
+                        new UpdateContactCustomAttributeData(IntercomElearningLastSynchronizedAttribute, synchronizedUnixTimeStamp.ToString()),
+                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseDateAttribute, latestCompletedCourseUnixTimeStamp?.ToString()),
                         new UpdateContactCustomAttributeData(IntercomCourseToTakeAttribute, nextCourseInPath?.Title),
                         new UpdateContactCustomAttributeData(IntercomCourseToTakeAttributeUrl, nextCourseInPath == null ? null : GetCourseUrl(nextCourseInPath)),
                         new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse?.Title),
