@@ -62,7 +62,7 @@ namespace Intercom
                     throw new Exception($"Could not post data to url '{url}'. Message: {response.ReasonPhrase}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 if (attempt >= RetryAttempts)
                 {

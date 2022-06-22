@@ -59,9 +59,18 @@ namespace Business
                 intercomContacts.AddRange(await IntercomService.GetAllContactsWithSubscriptionAsync());
             }
 
+            if (!intercomContacts.Any())
+            {
+                return result;
+            }
+
             // get user -> courses
             var userEmails = intercomContacts.Select(m => m.Email).ToList();
             var userCourses = await ElearningDataService.GetLatestCompletedCoursesAsync(userEmails);
+
+            // pre-load courses from kontent
+            var courseIds = userCourses.Users.Select(m => m.CourseId).Distinct().ToList();
+            var courses = await KontentService.GetTrainingCoursesByIds(courseIds);
 
             foreach (var contact in intercomContacts)
             {
@@ -76,7 +85,7 @@ namespace Business
                 var latestCompletedCourseResult = userCourses.Users
                     .FirstOrDefault(m => m.Email.Equals(contact.Email, StringComparison.OrdinalIgnoreCase));
 
-                if (string.IsNullOrEmpty(latestCompletedCourseResult?.Course))
+                if (string.IsNullOrEmpty(latestCompletedCourseResult?.CourseId))
                 {
                     // user does not have any completed courses
                     result.UsersWithoutCompletedCourses.Add(new IntercomContactSynchronizationResult(contact));
@@ -84,7 +93,7 @@ namespace Business
                 }
 
                 // get next course in path
-                var nextCourseInPathResult = await KontentService.GetNextTrainingCourseByTalentLmsId(latestCompletedCourseResult.Course);
+                var nextCourseInPathResult =  KontentService.GetNextTrainingCourseByCourseId(courses, latestCompletedCourseResult.CourseId);
 
                 // latest completed course date
                 long? latestCompletedCourseUnixTimeStamp = null;
@@ -124,6 +133,10 @@ namespace Business
 
         private bool ContactHasAccessToElearning(IntercomContact contact, bool isTest)
         {
+            if (isTest)
+            {
+                return true;
+            }
             if (!contact.CustomAttributes.ContainsKey(IntercomSubscriptionAttribute))
             {
                 return false;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Kentico.Kontent.Delivery.Abstractions;
@@ -18,28 +19,24 @@ namespace Kontent
         {
         }
 
-        public async Task<TrainingCourseModel> GetTrainingCourseByTalentLmsId(string id)
+        public async Task<List<TrainingCourseModel>> GetTrainingCoursesByIds(List<string> ids)
         {
             var trainingCourses = await GetDeliveryClient().GetItemsAsync<TrainingCourseModel>(
-                new DepthParameter(2),
-                new EqualsFilter("elements.talentlms_course_id", id));
+                new DepthParameter(1),
+                new ElementsParameter(TrainingCourseModel.DescriptionCodename, TrainingCourseModel.NextInPathCodename, TrainingCourseModel.TitleCodename, TrainingCourseModel.UrlCodename),
+                new InFilter("system.id", ids.ToArray()));
 
             if (!trainingCourses.Items.Any())
             {
-                return null;
+                return new List<TrainingCourseModel>();
             }
 
-            if (trainingCourses.Items.Count > 1)
-            {
-                throw new NotSupportedException($"There are multiple training courses with talent lms id '{id}'");
-            }
-
-            return trainingCourses.Items.First();
+            return trainingCourses.Items.ToList();
         }
 
-        public async Task<NextTrainingCourseResult> GetNextTrainingCourseByTalentLmsId(string id)
+        public NextTrainingCourseResult GetNextTrainingCourseByCourseId(List<TrainingCourseModel> courses, string id)
         {
-            var course = await GetTrainingCourseByTalentLmsId(id);
+            var course = courses.FirstOrDefault(m => m.System.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
 
             var nextInPath = course?.NextInPath.FirstOrDefault();
 

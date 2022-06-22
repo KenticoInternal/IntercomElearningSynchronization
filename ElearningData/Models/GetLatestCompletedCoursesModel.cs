@@ -19,7 +19,7 @@ namespace ElearningData.Models
         public string Email { get; set; }
 
         [JsonProperty("course")]
-        public string Course { get; set; }
+        public string CourseId { get; set; }
 
         [JsonProperty("completedUtc")]
         public DateTime? CompletedUtc { get; set; }

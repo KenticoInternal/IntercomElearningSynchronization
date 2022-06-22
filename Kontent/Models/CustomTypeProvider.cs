@@ -9,7 +9,7 @@ namespace Kontent.Models
     {
         private static readonly Dictionary<Type, string> _codenames = new Dictionary<Type, string>
         {
-            {typeof(TrainingCourseModel), "training_course"},
+            {typeof(TrainingCourseModel), "training_course2"},
         };
 
         public Type GetType(string contentType)

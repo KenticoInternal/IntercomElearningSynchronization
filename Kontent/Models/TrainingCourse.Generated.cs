@@ -11,29 +11,15 @@ namespace Kontent.Models
 {
     public partial class TrainingCourseModel
     {
-        public const string Codename = "training_course";
+        public const string Codename = "training_course2";
         public const string DescriptionCodename = "description";
-        public const string DurationCodename = "duration";
-        public const string IntroductionCodename = "introduction";
-        public const string PersonaCodename = "persona";
-        public const string TalentlmsCourseIdCodename = "talentlms_course_id";
-        public const string TalentlmsCourseIdPreviewCodename = "talentlms_course_id_preview";
-        public const string ThumbnailCodename = "thumbnail";
         public const string TitleCodename = "title";
-        public const string TrainingCourseCodename = "training_course";
         public const string UrlCodename = "url";
         public const string NextInPathCodename = "next_in_path";
 
         public string Description { get; set; }
-        public decimal? Duration { get; set; }
-        public string Introduction { get; set; }
-        public IEnumerable<IMultipleChoiceOption> Persona { get; set; }
         public IContentItemSystemAttributes System { get; set; }
-        public decimal? TalentlmsCourseId { get; set; }
-        public decimal? TalentlmsCourseIdPreview { get; set; }
-        public IEnumerable<IAsset> Thumbnail { get; set; }
         public string Title { get; set; }
-        public IEnumerable<ITaxonomyTerm> TrainingCourse { get; set; }
         public IEnumerable<TrainingCourseModel> NextInPath { get; set; }
         public string Url { get; set; }
     }
