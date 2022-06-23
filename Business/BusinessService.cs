@@ -171,7 +171,7 @@ namespace Business
 
         private string GetCourseUrl(TrainingCourseModel course)
         {
-            return $"https://docs.kontent.ai/e-learning/{course.Url}";
+            return $"https://kontent.ai/learn/e-learning/{course.System.Codename}";
         }
 
         private bool ContactHasAccessToElearning(IntercomContact contact, bool isTest)
