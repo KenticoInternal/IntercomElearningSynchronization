@@ -17,36 +17,33 @@ namespace ElearningData
 
         public ElearningDataService() : base() { }
 
-        public async Task<GetLatestCompletedCoursesModel> GetLatestCompletedCoursesAsync(List<string> userEmails)
+        public async Task<List<CompletedUserCoursesModel>> GetLatestCompletedCoursesAsync(List<string> userEmails)
         {
-            var reportingItems = new List<GetLatestCompletedUserCourseModel>();
+            var result = new List<CompletedUserCoursesModel>();
 
             foreach (var userEmail in userEmails)
             {
                 var items = await Container.GetItemLinqQueryable<ReportingItemModel>()
                     .Where(m => m.PartitionKey == userEmail && m.Status == CompletedStatusIdentifier && m.CompletedDate != null)
                     .OrderByDescending(m => m.CompletedDate)
-                    .Take(1)
                     .ToFeedIterator()
                     .ReadNextAsync();
 
-                var item = items.FirstOrDefault();
 
-                if (item != null && item.CompletedDate != null)
+                result.Add(new CompletedUserCoursesModel()
                 {
-                    reportingItems.Add(new GetLatestCompletedUserCourseModel()
+                    Email = userEmail,
+                    CompletedCourses = items
+                        .Where(m => m.CompletedDate != null)
+                        .Select(m => new CompletedUserCourseModel()
                     {
-                        CompletedUtc = item.CompletedDate.Value,
-                        CourseId = item.CourseId,
-                        Email = item.PartitionKey
-                    });
-                }
+                        CompletedUtc = m.CompletedDate.Value,
+                        CourseId = m.CourseId,
+                    }).ToList()
+                });
             }
 
-            return new GetLatestCompletedCoursesModel()
-            {
-                Users = reportingItems
-            };
+            return result;
         }
 
     }

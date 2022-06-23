@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Business.Models;
 using ElearningData;
+using ElearningData.Models;
 using Humanizer;
 using Intercom;
 using Intercom.Models;
@@ -69,7 +70,7 @@ namespace Business
             var userCourses = await ElearningDataService.GetLatestCompletedCoursesAsync(userEmails);
 
             // pre-load courses from kontent
-            var courseIds = userCourses.Users.Select(m => m.CourseId).Distinct().ToList();
+            var courseIds = userCourses.SelectMany(m => m.CompletedCourses.Select(s => s.CourseId)).Distinct().ToList();
             var courses = await KontentService.GetTrainingCoursesByIds(courseIds);
 
             foreach (var contact in intercomContacts)
@@ -82,29 +83,34 @@ namespace Business
                 }
 
                 // get latest completed course for given user
-                var latestCompletedCourseResult = userCourses.Users
+                var userWithCourses = userCourses
                     .FirstOrDefault(m => m.Email.Equals(contact.Email, StringComparison.OrdinalIgnoreCase));
 
-                if (string.IsNullOrEmpty(latestCompletedCourseResult?.CourseId))
+                if (userWithCourses == null)
                 {
-                    // user does not have any completed courses
+                    continue;
+                }
+
+                if (!userWithCourses.CompletedCourses.Any())
+                {
+                    // user haven't completed any courses
                     result.UsersWithoutCompletedCourses.Add(new IntercomContactSynchronizationResult(contact));
                     continue;
                 }
 
                 // get next course in path
-                var nextCourseInPathResult =  KontentService.GetNextTrainingCourseByCourseId(courses, latestCompletedCourseResult.CourseId);
+                var nextCourseInPathResult = GetNextTrainingCourseResult(courses, userWithCourses);
 
                 // latest completed course date
                 long? latestCompletedCourseUnixTimeStamp = null;
 
-                if (latestCompletedCourseResult?.CompletedUtc != null)
+                if (nextCourseInPathResult.latestCourseCompletedDate != null)
                 {
-                    latestCompletedCourseUnixTimeStamp = ((DateTimeOffset)latestCompletedCourseResult?.CompletedUtc.Value).ToUnixTimeSeconds();
+                    latestCompletedCourseUnixTimeStamp = ((DateTimeOffset)nextCourseInPathResult.latestCourseCompletedDate.Value).ToUnixTimeSeconds();
                 }
 
-                var nextCourseInPath = nextCourseInPathResult.NextCourseInPath;
-                var latestCompletedCourse = nextCourseInPathResult.LatestCompletedCourse;
+                var nextCourseInPath = nextCourseInPathResult.nextCourse;
+                var latestCompletedCourse = nextCourseInPathResult.latestCompletedCourse;
 
                 var synchronizedUnixTimeStamp = DateTimeOffset.Now.ToUnixTimeSeconds();
 
@@ -124,6 +130,44 @@ namespace Business
             }
 
             return result;
+        }
+
+        private (DateTime? latestCourseCompletedDate, TrainingCourseModel nextCourse, TrainingCourseModel latestCompletedCourse) GetNextTrainingCourseResult(List<TrainingCourseModel> courses, CompletedUserCoursesModel userCourses)
+        {
+            // order completed courses by date
+            var orderedCompletedCourses = userCourses.CompletedCourses.OrderByDescending(m => m.CompletedUtc).ToList();
+            var latestCompletedCourseId = orderedCompletedCourses.FirstOrDefault()?.CourseId;
+            var latestCourseCompletedDate = orderedCompletedCourses.FirstOrDefault()?.CompletedUtc;
+            var latestCompletedCourse = courses.FirstOrDefault(m =>
+                m.System.Id.Equals(latestCompletedCourseId, StringComparison.OrdinalIgnoreCase));
+            
+
+            foreach (var completedCourse in orderedCompletedCourses)
+            {
+                var course = courses.FirstOrDefault(m => m.System.Id.Equals(completedCourse.CourseId, StringComparison.OrdinalIgnoreCase));
+
+                var nextInPath = course?.NextInPath.FirstOrDefault();
+
+                if (nextInPath == null)
+                {
+                    // there is no next course or course was not found
+                    continue;
+                }
+
+                // check if user completed the next course
+                var userCompletedNextCourse = orderedCompletedCourses.FirstOrDefault(m =>
+                    m.CourseId.Equals(nextInPath.System.Id, StringComparison.OrdinalIgnoreCase)) != null;
+
+                if (userCompletedNextCourse)
+                {
+                    // user already completed the next course
+                    continue;
+                }
+
+                return (latestCourseCompletedDate, nextInPath, latestCompletedCourse);
+            }
+
+            return (latestCourseCompletedDate, null, latestCompletedCourse);
         }
 
         private string GetCourseUrl(TrainingCourseModel course)

@@ -34,19 +34,6 @@ namespace Kontent
             return trainingCourses.Items.ToList();
         }
 
-        public NextTrainingCourseResult GetNextTrainingCourseByCourseId(List<TrainingCourseModel> courses, string id)
-        {
-            var course = courses.FirstOrDefault(m => m.System.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
-
-            var nextInPath = course?.NextInPath.FirstOrDefault();
-
-            return new NextTrainingCourseResult()
-            {
-                LatestCompletedCourse = course,
-                NextCourseInPath = nextInPath
-            };
-        }
-
         private IDeliveryClient GetDeliveryClient()
         {
             return DeliveryClientBuilder

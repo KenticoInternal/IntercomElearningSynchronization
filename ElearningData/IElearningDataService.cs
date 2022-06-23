@@ -8,6 +8,6 @@ namespace ElearningData
     public interface IElearningDataService
     {
 
-        Task<GetLatestCompletedCoursesModel> GetLatestCompletedCoursesAsync(List<string> userEmails);
+        Task<List<CompletedUserCoursesModel>> GetLatestCompletedCoursesAsync(List<string> userEmails);
     }
 }
