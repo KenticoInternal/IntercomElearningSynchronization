@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Business.Models;
 using ElearningData;
 using ElearningData.Models;
-using Humanizer;
 using Intercom;
 using Intercom.Models;
 using Kontent;
@@ -115,18 +113,19 @@ namespace Business
                 var synchronizedUnixTimeStamp = DateTimeOffset.Now.ToUnixTimeSeconds();
 
                 // update user in intercom with next course in learning path
-                var updatedContact = IntercomService.UpdateContactAsync(contact,
-                    new List<UpdateContactCustomAttributeData>()
-                    {
-                        new UpdateContactCustomAttributeData(IntercomElearningLastSynchronizedAttribute, synchronizedUnixTimeStamp.ToString()),
-                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseDateAttribute, latestCompletedCourseUnixTimeStamp?.ToString()),
-                        new UpdateContactCustomAttributeData(IntercomCourseToTakeAttribute, nextCourseInPath?.Title),
-                        new UpdateContactCustomAttributeData(IntercomCourseToTakeAttributeUrl, nextCourseInPath == null ? null : GetCourseUrl(nextCourseInPath)),
-                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse?.Title),
-                        new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseUrlAttribute, latestCompletedCourse == null ? null : GetCourseUrl(latestCompletedCourse)),
-                    });
+                var updateAttributes = new List<UpdateContactCustomAttributeData>()
+                {
+                    new UpdateContactCustomAttributeData(IntercomElearningLastSynchronizedAttribute, synchronizedUnixTimeStamp.ToString()),
+                    new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseDateAttribute, latestCompletedCourseUnixTimeStamp?.ToString()),
+                    new UpdateContactCustomAttributeData(IntercomCourseToTakeAttribute, nextCourseInPath?.Title),
+                    new UpdateContactCustomAttributeData(IntercomCourseToTakeAttributeUrl, nextCourseInPath == null ? null : GetCourseUrl(nextCourseInPath)),
+                    new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseAttribute, latestCompletedCourse?.Title),
+                    new UpdateContactCustomAttributeData(IntercomLatestCompletedCourseUrlAttribute, latestCompletedCourse == null ? null : GetCourseUrl(latestCompletedCourse)),
+                };
 
-                result.UsersWithCompletedCourse.Add(new IntercomContactSynchronizationResult(contact, nextCourseInPath?.Title, latestCompletedCourse?.Title));
+                var updatedContact = IntercomService.UpdateContactAsync(contact, updateAttributes);
+
+                result.UsersWithCompletedCourse.Add(new IntercomContactSynchronizationResult(contact, updateAttributes, nextCourseInPath?.Title, latestCompletedCourse?.Title));
             }
 
             return result;

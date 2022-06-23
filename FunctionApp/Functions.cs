@@ -10,6 +10,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FunctionApp
 {
@@ -136,7 +137,8 @@ namespace FunctionApp
                 NextCourse = contactResult?.NextCourse,
                 LatestCourse = contactResult?.LatestCourse,
                 ContactEmail = contactResult?.Contact?.Email,
-                ContactId = contactResult?.Contact?.Id
+                ContactId = contactResult?.Contact?.Id,
+                UpdateAttributes = contactResult != null ? JArray.FromObject(contactResult.UpdatedAttributes) : null
             };
         }
 
@@ -182,6 +184,9 @@ namespace FunctionApp
 
             [JsonProperty("Next course")]
             public string NextCourse { get; set; }
+
+            [JsonProperty("Updated attributes")]
+            public JArray UpdateAttributes { get; set; }
         }
     }
 }
